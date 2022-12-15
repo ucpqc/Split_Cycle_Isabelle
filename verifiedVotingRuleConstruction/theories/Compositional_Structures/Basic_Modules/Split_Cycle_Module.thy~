@@ -1,0 +1,28 @@
+section \<open>Split Cycle Module\<close>
+
+theory Split_Cycle_Module
+  imports "Component_Types/Electoral_Module"
+          "Component_Types/Margin_Graph_Creator"
+          "Component_Types/Graph_Winner_Finder"
+          "../Sequential_Composition"
+begin
+
+fun mgWeight::"'a Weight_Function" where
+"mgWeight cand P arc = (prefer_count (limit_profile cand P) (fst  arc) (snd arc)) 
+- (prefer_count (limit_profile cand P) (snd arc) (fst arc)) "
+
+fun split_cycle_first_round::"'a Electoral_Module" where
+"split_cycle_first_round A p = evaluateGraph(createMarginGraph A p mgWeight)"
+
+
+lemma "profile {} [{}] = True"
+ unfolding profile_def all_set_conv_all_nth
+  by simp
+
+lemma "split_cycle_first_round {} [{}] = ({},{},{})"
+  by auto
+
+lemma "profile {0,1} [{(1,0)}] = True"
+  
+
+end

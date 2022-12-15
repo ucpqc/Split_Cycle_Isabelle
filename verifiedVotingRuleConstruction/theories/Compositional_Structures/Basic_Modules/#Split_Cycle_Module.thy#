@@ -1,0 +1,76 @@
+section \<open>Split Cycle Module\<close>
+
+theory Split_Cycle_Module
+  imports "Component_Types/Electoral_Module"
+          "Component_Types/Margin_Graph_Creator"
+          "Component_Types/Graph_Winner_Finder"
+          "../Sequential_Composition"
+begin
+
+datatype candidates = A|B|C|D
+
+
+
+fun mgWeight::"'a Weight_Function" where
+"mgWeight cand P arc = (prefer_count (limit_profile cand P) (fst  arc) (snd arc)) 
+- (prefer_count (limit_profile cand P) (snd arc) (fst arc)) "
+
+
+fun split_cycle_first_round::"'a Electoral_Module" where
+"split_cycle_first_round a p = evaluateGraph(createMarginGraph a p mgWeight)"
+
+
+fun testProfile::"candidates \<Rightarrow> candidates \<Rightarrow> candidates \<Rightarrow> candidates Profile" where 
+"testProfile A B C =  [{(A,A),(B,B),(C,C),(A,B),(B,C),(A,C)}]"|
+  "testProfile x y z = [{}]"
+
+lemma "profile {} [{}] = True"
+ unfolding profile_def all_set_conv_all_nth
+  by simp
+
+lemma "split_cycle_first_round {} [{}] = ({},{},{})"
+  by auto
+
+lemma "profile {0} [{(0,0)}] = True"
+  unfolding profile_def all_set_conv_all_nth
+  by simp
+
+
+lemma "profile {A,B,C} (testProfile A B C)= True"
+  sledgehammer[verbose]
+  unfolding profile_def
+            all_set_conv_all_nth 
+            linear_order_on_def 
+            partial_order_on_def
+            preorder_on_def
+            refl_on_def
+            trans_def antisym_def
+            total_on_def
+  by simp
+
+lemma [simp]:"getArcs {A,B,C} = {(A,B),(A,C),(B,A),(B,C),(C,A),(C,B)}"
+  by auto
+
+lemma "limit_profile {A,B,C} (testProfile A B C) = testProfile A B C"
+  by auto
+
+lemma "above {(A,B)} A = {B}"
+  by auto
+
+lemma "win_count (testProfile A B C) A = 1"
+  unfolding above_def
+  by simp
+
+lemma [simp]:"mgWeight {A,B,C} (testProfile A B C) (A,B) = 1"
+  by auto
+
+lemma "createMarginGraph {A,B,C} (testProfile A B C) mgWeight 
+= \<lparr>verts = {A,B,C}, arcs = {(A,B),(B,C),(A,C)},tail=fst, head=snd\<rparr> "
+  apply simp_all
+  done
+
+lemma "split_cycle_first_round {A,B,C} [{(A,A),(B,B),(C,C),(A,B),(B,C),(A,C)}] =({A},{C},{B})"
+  by auto
+  
+
+end
